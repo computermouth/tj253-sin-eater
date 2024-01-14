@@ -12,6 +12,7 @@
 ********************************************************************************************/
 
 #include "raylib.h"
+#include "raymath.h"
 
 #if defined(PLATFORM_WEB)
     #define CUSTOM_MODAL_DIALOGS            // Force custom modal dialogs usage
@@ -35,18 +36,6 @@
 #endif
 
 //----------------------------------------------------------------------------------
-// Types and Structures Definition
-//----------------------------------------------------------------------------------
-typedef enum { 
-    SCREEN_LOGO = 0, 
-    SCREEN_TITLE, 
-    SCREEN_GAMEPLAY, 
-    SCREEN_ENDING
-} GameScreen;
-
-// TODO: Define your custom data types here
-
-//----------------------------------------------------------------------------------
 // Global Variables Definition
 //----------------------------------------------------------------------------------
 static const int screenWidth = 1280;
@@ -54,12 +43,12 @@ static const int screenHeight = 720;
 
 static RenderTexture2D target = { 0 };  // Render texture to render our game
 
-// TODO: Define global variables here, recommended to make them static
-
 //----------------------------------------------------------------------------------
 // Module Functions Declaration
 //----------------------------------------------------------------------------------
 static void UpdateDrawFrame(void);      // Update and Draw one frame
+
+Material cube_mat = { 0 };
 
 //------------------------------------------------------------------------------------
 // Program main entry point
@@ -74,7 +63,9 @@ int main(void)
     //--------------------------------------------------------------------------------------
     InitWindow(screenWidth, screenHeight, "crayjam");
     
-    // TODO: Load resources / Initialize variables at this point
+    Texture cube_tex = LoadTexture("res/grass_tile.png");
+    cube_mat = LoadMaterialDefault();
+    SetMaterialTexture(&cube_mat, MATERIAL_MAP_DIFFUSE, cube_tex);
     
     // Render texture to draw full screen, enables screen scaling
     // NOTE: If screen is scaled, mouse input should be scaled proportionally
@@ -126,6 +117,19 @@ void UpdateDrawFrame(void)
         
         // TODO: Draw your game screen here
         DrawRectangle(10, 10, screenWidth - 20, screenHeight - 20, SKYBLUE);
+
+        Camera3D camera = { 0 };
+        camera.fovy = 45;
+        camera.position = (Vector3){5, 5, 5};
+        camera.projection = CAMERA_PERSPECTIVE;
+        camera.up = (Vector3){0,1,0};
+        // camera.target = (Vector3){10, 0, 0};
+        
+        BeginMode3D(camera);
+            DrawMesh(GenMeshCube(1, 1, 1), cube_mat, MatrixIdentity());
+            // DrawCube((Vector3){0}, 1, 1, 1, RED);
+            DrawGrid(10, 1);
+        EndMode3D();
         
     EndTextureMode();
     

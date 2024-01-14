@@ -16,9 +16,13 @@ BIN ?= crayjam
 
 ## platform-specifics
 ifeq ($(PLATFORM),PLATFORM_WEB)
-	BIN__OUT = index.html
-	EFLAGS += -s ASYNCIFY           -s USE_GLFW=3  -s TOTAL_MEMORY=128MB
-	EFLAGS += -s FORCE_FILESYSTEM=1 -DPLATFORM_WEB --shell-file data/minshell.html
+	BIN = index.html
+	EFLAGS += -s ASYNCIFY
+	EFLAGS += -s USE_GLFW=3
+	EFLAGS += -s TOTAL_MEMORY=128MB
+	EFLAGS += -s FORCE_FILESYSTEM=1
+	EFLAGS += -DPLATFORM_WEB
+	EFLAGS += --shell-file data/minshell.html
 	EFLAGS += --preload-file res
 	CC = emcc
 else ifeq ($(PLATFORM),PLATFORM_DESKTOP)
@@ -43,9 +47,11 @@ else ifeq ($(PLATFORM),PLATFORM_DESKTOP)
 	endif
 endif
 
+BUILD_DEP = $(wildcard src/*) Makefile $(wildcard res/*)
+C_SRC = $(wildcard src/*.c)
 
-out/$(BIN): $(RAYLIB_SRC)/$(RAYLIB_PLT)
-	$(CC) -o out/$(BIN) src/main.c $(IFLAGS) $(LFLAGS) $(EFLAGS)
+out/$(BIN): $(RAYLIB_SRC)/$(RAYLIB_PLT) $(BUILD_DEP)
+	$(CC) -o out/$(BIN) $(C_SRC) $(IFLAGS) $(LFLAGS) $(EFLAGS)
 
 $(RAYLIB_SRC)/$(RAYLIB_PLT):
 	$(MAKE) -C $(RAYLIB_SRC) clean
