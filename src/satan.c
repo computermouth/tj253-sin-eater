@@ -1,18 +1,12 @@
 
 #include "res.h"
+#include "player.h"
 
 #include <math.h>
 #include <raylib.h>
+#include <raymath.h>
 #include <stdint.h>
 #include <stdio.h>
-
-// x + 1
-// y + 1
-
-//          satan_tex[X][Y][AN][FR]
-typedef struct {
-    Texture satan_tex[3][3][ 4][ 5];
-} st_s;
 
 typedef enum {
         IDLE,
@@ -21,41 +15,149 @@ typedef enum {
         DIE_,
 } phase;
 
-st_s satan_textures = { 0 };
+typedef struct {
+    Texture textures[3][3][ 4][ 5];
+    int last_xdir;
+    int last_ydir;
+    int curr_xdir;
+    int curr_ydir;
+    float pos_x;
+    float pos_y;
+    int health;
+    phase animation;
+    float anim_start;
+    float atk1_last;
+    float atk1_cool;
+    float atk2_last;
+    float atk2_cool;
+    float dash_last;
+    float dash_cool;
+} sd_t;
 
-static int last_xdir = 2;
-static int last_ydir = 2;
+static sd_t satan_data = { 0 };
+
+void satan_health_down(int m){
+    satan_data.health -= m;
+}
+int satan_get_health(){
+    return satan_data.health;
+}
+
+void satan_kill(){
+    satan_data.animation = DIE_;
+}
+
+Vector2 satan_dir_from(float px, float py){
+    Vector2 v =  Vector2Normalize(Vector2Subtract((Vector2){px + 128, py + 128}, (Vector2){satan_data.pos_x + 128, satan_data.pos_y + 128}));
+    v.x = roundf(v.x);
+    v.y = roundf(v.y);
+    return Vector2Negate(v);
+}
+
+float satan_distance(float px, float py){
+    return Vector2Distance((Vector2){px, py}, (Vector2){satan_data.pos_x, satan_data.pos_y});
+}
+
+void satan_update(){
+
+    // direction to face
+    Vector2 dir = player_dir_from(satan_data.pos_x, satan_data.pos_y);
+
+    satan_data.curr_xdir = dir.x + 1;
+    satan_data.curr_ydir = dir.y + 1;
+
+    // if attacking, return
+    if (satan_data.animation == ATK1 && (GetTime() - satan_data.anim_start) <= 0.5){
+        return;
+    } else if (satan_data.animation == ATK1 && (GetTime() - satan_data.anim_start) > 0.5) {
+        if(player_distance(satan_data.pos_x, satan_data.pos_y) < 256)
+            player_health_down(2);
+    }
+
+    satan_data.animation = WALK;
+
+    // attack
+    if (player_distance(satan_data.pos_x, satan_data.pos_y) < 64 && (satan_data.atk1_last + satan_data.atk1_cool) < GetTime()) {
+        satan_data.animation = ATK1;
+        satan_data.anim_start = GetTime();
+        satan_data.atk1_last = GetTime();
+        return;
+    }
+    
+    // back off
+    if (player_distance(satan_data.pos_x, satan_data.pos_y) < 200 && (satan_data.atk1_last + satan_data.atk1_cool) > GetTime()) {
+        satan_data.pos_x -= dir.x * 100 * GetFrameTime();
+        satan_data.pos_y -= dir.y * 100 * GetFrameTime();
+        satan_data.pos_x = Clamp(satan_data.pos_x, 0, 1280 - 256);
+        satan_data.pos_y = Clamp(satan_data.pos_y, 0,  720 - 256);
+        return;
+    }
+
+    // approach
+    if (player_distance(satan_data.pos_x, satan_data.pos_y) >= 64){
+        satan_data.pos_x += dir.x * 100 * GetFrameTime();
+        satan_data.pos_y += dir.y * 100 * GetFrameTime();
+        satan_data.pos_x = Clamp(satan_data.pos_x, 0, 1280 - 256);
+        satan_data.pos_y = Clamp(satan_data.pos_y, 0,  720 - 256);
+        return;
+    }
+
+    // // anims
+    // if(xdir == 0 && ydir == 0){
+	// 	player_data.curr_xdir = player_data.last_xdir;
+	// 	player_data.curr_ydir = player_data.last_ydir;
+	// 	player_data.animation = IDLE;
+    //     player_data.anim_start = GetTime();
+	// } else {
+	// 	player_data.animation = WALK;
+    //     player_data.anim_start = GetTime();
+	// }
+
+	// if (IsKeyDown(KEY_J)){
+	// 	player_data.animation = ATK1;
+    //     player_data.anim_start = GetTime();
+    // }
+
+	// if (IsKeyDown(KEY_K)){
+	// 	player_data.animation = DIE_;
+    //     player_data.anim_start = GetTime();
+    // }
+
+}
 
 void satan_draw(){
 
-    int xdir = IsKeyDown(KEY_D) - IsKeyDown(KEY_A);
-    int ydir = IsKeyDown(KEY_S) - IsKeyDown(KEY_W);
-    xdir++;
-    ydir++;
-    
-    phase p = WALK;
-    
-    // IDLE
-    if(xdir == 1 && ydir == 1){
-		xdir = last_xdir;
-		ydir = last_ydir;
-		p = IDLE;
-	} else {
-		last_xdir = xdir;
-		last_ydir = ydir;
-	}
-	
-	if (IsKeyDown(KEY_J))
-		p = ATK1;
-	if (IsKeyDown(KEY_K))
-		p = DIE_;
+    int xd = satan_data.curr_xdir;
+    int yd = satan_data.curr_ydir;
+    int ap = satan_data.animation;
 
-    DrawTexture(satan_textures.satan_tex[xdir][ydir][p][(unsigned int)fmodf(GetTime() * 10, 5)], 600, 300, WHITE);
+    int xp = satan_data.pos_x;
+    int yp = satan_data.pos_y;
+
+    float at = satan_data.anim_start;
+    int frame = fmodf((GetTime() - at) * 10, 5); // half second from start to finish
+
+    DrawTexture(satan_data.textures[xd][yd][ap][frame], xp, yp, WHITE);
+
+    char h[20];
+    sprintf(h, "enemy health: %d", satan_data.health);
+    DrawText(h, 1090, 20, 20, BLACK);
 }
 
-void satan_init_tex(){
-    st_s p = {
-        .satan_tex = {
+void satan_init(){
+    sd_t p = {
+        .last_xdir = 0,
+        .last_ydir = 2,
+        .curr_xdir = 0,
+        .curr_ydir = 2,
+        .pos_x = 1000,
+        .pos_y = 50,
+        .health = 50,
+        .animation = IDLE,
+        .anim_start = 0,
+        .atk1_last = 0,
+        .atk1_cool = 2,
+        .textures = {
             [1][0] = { // x == 0, y == -1
                 [IDLE] = {
                     res_img_satan_idle_000_Idle_Body_000_0003_png,
@@ -299,5 +401,5 @@ void satan_init_tex(){
         }
     };
 
-    satan_textures = p;
+    satan_data = p;
 };

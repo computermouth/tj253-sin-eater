@@ -16,6 +16,8 @@
 #include "res.h"
 #include "player.h"
 #include "satan.h"
+#define RAYGUI_IMPLEMENTATION
+#include "raygui.h"
 
 #if defined(PLATFORM_WEB)
     #define CUSTOM_MODAL_DIALOGS            // Force custom modal dialogs usage
@@ -53,6 +55,14 @@ static void UpdateDrawFrame(void);      // Update and Draw one frame
 
 Material cube_mat = { 0 };
 
+typedef enum {
+    MENU,
+    PLAY,
+    OVER,
+} state;
+
+state gs = MENU;
+
 //------------------------------------------------------------------------------------
 // Program main entry point
 //------------------------------------------------------------------------------------
@@ -65,11 +75,11 @@ int main(void)
 
     // Initialization
     //--------------------------------------------------------------------------------------
-    InitWindow(screenWidth, screenHeight, "crayjam");
+    InitWindow(screenWidth, screenHeight, "trijam253");
 
     resource_init();
-    player_init_tex();
-    satan_init_tex();
+    satan_init();
+    player_init();
     
     Texture cube_tex = LoadTexture("res/grass_tile.png");
     cube_mat = LoadMaterialDefault();
@@ -79,6 +89,8 @@ int main(void)
     // NOTE: If screen is scaled, mouse input should be scaled proportionally
     target = LoadRenderTexture(screenWidth, screenHeight);
     SetTextureFilter(target.texture, TEXTURE_FILTER_BILINEAR);
+
+    SetRandomSeed(GetTime());
 
 #if defined(PLATFORM_WEB)
     emscripten_set_main_loop(UpdateDrawFrame, 60, 1);
@@ -116,6 +128,20 @@ void UpdateDrawFrame(void)
     // TODO: Update variables / Implement example logic at this point
     //----------------------------------------------------------------------------------
 
+    if (gs == PLAY){
+        satan_update();
+        player_update();
+    }
+
+    if (player_get_health() <= 0){
+        gs = OVER;
+        player_kill();
+    }
+    if (satan_get_health() <= 0){
+        gs = OVER;
+        satan_kill();
+    }
+
     // Draw
     //----------------------------------------------------------------------------------
     // Render game screen to a texture, 
@@ -127,6 +153,30 @@ void UpdateDrawFrame(void)
         DrawRectangle(10, 10, screenWidth - 20, screenHeight - 20, LIGHTGRAY);
         player_draw();
         satan_draw();
+
+        if (gs == MENU) {
+            // hack
+            player_init();
+            satan_init();
+            DrawText("Satan: Fight me, loser buys lunch", 1280 / 2 - MeasureText("Satan: Fight me, loser buys lunch", 30) / 2, 100, 30, BLACK);
+            if(GuiButton((Rectangle){1280. / 2 - 64, 720. / 2 - 64, 128, 128}, "IT'S A DEAL, SATAN!")){
+                gs = PLAY;
+            }
+        }
+
+        if (gs == OVER) {
+            // hack
+            if (player_get_health() <= 0) {
+                DrawText("YOU LOSE, BUY LUNCH", 1280 / 2 - MeasureText("YOU LOSE, BUY LUNCH", 50) / 2, 100, 50, RED);
+            } else {
+                DrawText("YOU WIN, SATAN BUYS LUNCH", 1280 / 2 - MeasureText("YOU WIN, SATAN BUYS LUNCH", 50) / 2, 100, 50, GREEN);
+            }
+            if(GuiButton((Rectangle){1280. / 2 - 32, 720. / 2 - 32, 64, 64}, "AGAIN")){
+                gs = PLAY;
+                player_init();
+                satan_init();
+            }
+        }
         
     EndTextureMode();
     

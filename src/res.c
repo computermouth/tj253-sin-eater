@@ -1,6 +1,12 @@
 
 #include "res.h"
 
+Texture clock_tex  = { 0 };
+Texture dash__tex  = { 0 };
+Texture super_tex  = { 0 };
+Texture sword_tex  = { 0 };
+Texture fire__tex  = { 0 };
+
 Texture res_img_orc_attack_000_Attack_01_Body_000_0002_png  = { 0 };
 Texture res_img_orc_attack_000_Attack_01_Body_000_0006_png  = { 0 };
 Texture res_img_orc_attack_000_Attack_01_Body_000_0010_png  = { 0 };
@@ -324,6 +330,12 @@ Texture res_img_satan_idle_315_Idle_Body_315_0018_png       = { 0 };
 Texture res_img_satan_idle_315_Idle_Body_315_0023_png       = { 0 };
 
 void resource_init(){
+
+    clock_tex  = LoadTexture("res/img/clock.png");
+    dash__tex  = LoadTexture("res/img/dash.png");
+    super_tex  = LoadTexture("res/img/super.png");
+    sword_tex  = LoadTexture("res/img/sword.png");
+    fire__tex  = LoadTexture("res/img/fire.png");
     
     res_img_orc_attack_000_Attack_01_Body_000_0002_png  = LoadTexture("res/img/orc/attack/000/Attack_01_Body_000_0002.png");
     res_img_orc_attack_000_Attack_01_Body_000_0006_png  = LoadTexture("res/img/orc/attack/000/Attack_01_Body_000_0006.png");

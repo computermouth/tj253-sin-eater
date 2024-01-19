@@ -7,6 +7,12 @@
 void resource_init();
 void resource_quit();
 
+extern Texture clock_tex;
+extern Texture dash__tex;
+extern Texture super_tex;
+extern Texture sword_tex;
+extern Texture fire__tex;
+
 extern Texture res_img_orc_attack_000_Attack_01_Body_000_0002_png  ;
 extern Texture res_img_orc_attack_000_Attack_01_Body_000_0006_png  ;
 extern Texture res_img_orc_attack_000_Attack_01_Body_000_0010_png  ;
