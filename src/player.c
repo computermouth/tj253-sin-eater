@@ -36,8 +36,8 @@ typedef enum {
 
 pt_s player_textures = { 0 };
 
-int last_xdir = 2;
-int last_ydir = 2;
+static int last_xdir = 2;
+static int last_ydir = 2;
 
 void player_draw(){
 

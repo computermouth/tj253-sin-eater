@@ -15,6 +15,7 @@
 #include "raymath.h"
 #include "res.h"
 #include "player.h"
+#include "satan.h"
 
 #if defined(PLATFORM_WEB)
     #define CUSTOM_MODAL_DIALOGS            // Force custom modal dialogs usage
@@ -68,6 +69,7 @@ int main(void)
 
     resource_init();
     player_init_tex();
+    satan_init_tex();
     
     Texture cube_tex = LoadTexture("res/grass_tile.png");
     cube_mat = LoadMaterialDefault();
@@ -124,6 +126,7 @@ void UpdateDrawFrame(void)
         // TODO: Draw your game screen here
         DrawRectangle(10, 10, screenWidth - 20, screenHeight - 20, LIGHTGRAY);
         player_draw();
+        satan_draw();
         
     EndTextureMode();
     
