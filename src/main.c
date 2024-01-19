@@ -13,6 +13,8 @@
 
 #include "raylib.h"
 #include "raymath.h"
+#include "res.h"
+#include "player.h"
 
 #if defined(PLATFORM_WEB)
     #define CUSTOM_MODAL_DIALOGS            // Force custom modal dialogs usage
@@ -55,6 +57,7 @@ Material cube_mat = { 0 };
 //------------------------------------------------------------------------------------
 int main(void)
 {
+#define _DEBUG 1
 #if !defined(_DEBUG)
     SetTraceLogLevel(LOG_NONE);         // Disable raylib trace log messsages
 #endif
@@ -62,6 +65,9 @@ int main(void)
     // Initialization
     //--------------------------------------------------------------------------------------
     InitWindow(screenWidth, screenHeight, "crayjam");
+
+    resource_init();
+    player_init_tex();
     
     Texture cube_tex = LoadTexture("res/grass_tile.png");
     cube_mat = LoadMaterialDefault();
@@ -116,20 +122,8 @@ void UpdateDrawFrame(void)
         ClearBackground(RAYWHITE);
         
         // TODO: Draw your game screen here
-        DrawRectangle(10, 10, screenWidth - 20, screenHeight - 20, SKYBLUE);
-
-        Camera3D camera = { 0 };
-        camera.fovy = 45;
-        camera.position = (Vector3){5, 5, 5};
-        camera.projection = CAMERA_PERSPECTIVE;
-        camera.up = (Vector3){0,1,0};
-        // camera.target = (Vector3){10, 0, 0};
-        
-        BeginMode3D(camera);
-            DrawMesh(GenMeshCube(1, 1, 1), cube_mat, MatrixIdentity());
-            // DrawCube((Vector3){0}, 1, 1, 1, RED);
-            DrawGrid(10, 1);
-        EndMode3D();
+        DrawRectangle(10, 10, screenWidth - 20, screenHeight - 20, LIGHTGRAY);
+        player_draw();
         
     EndTextureMode();
     
